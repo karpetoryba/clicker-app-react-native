@@ -1,5 +1,11 @@
-import { Image, StyleSheet, Button, View } from "react-native";
-import { useEffect, useState } from "react";
+import {
+  Image,
+  StyleSheet,
+  View,
+  TouchableOpacity,
+  Animated,
+} from "react-native";
+import { useEffect, useState, useRef } from "react";
 import {
   collection,
   addDoc,
@@ -17,6 +23,9 @@ export default function HomeScreen() {
   const [blueCount, setBlueCount] = useState(0);
   const [totalCount, setTotalCount] = useState(0);
   const [progress, setProgress] = useState(0.5); // Start at neutral 0.5
+
+  // Animated background color value
+  const backgroundColorAnim = useRef(new Animated.Value(0.5)).current;
 
   useEffect(() => {
     const interactionRef = collection(db, "interactions");
@@ -70,6 +79,25 @@ export default function HomeScreen() {
     }
   }, [redCount, blueCount, totalCount]);
 
+  // Animate background color when progress changes
+  useEffect(() => {
+    Animated.timing(backgroundColorAnim, {
+      toValue: progress,
+      duration: 1000,
+      useNativeDriver: false,
+    }).start();
+  }, [progress]);
+
+  // Interpolate the background color based on progress
+  const backgroundColor = backgroundColorAnim.interpolate({
+    inputRange: [0, 0.5, 1],
+    outputRange: [
+      "rgba(255, 82, 82, 0.2)",
+      "rgba(255, 255, 255, 1)",
+      "rgba(76, 110, 245, 0.2)",
+    ],
+  });
+
   interface Interaction {
     team: string;
   }
@@ -81,69 +109,86 @@ export default function HomeScreen() {
         team: teamColor,
       } as Interaction);
       console.log("Document créé avec succès");
+
+      // Add immediate feedback animation
+      Animated.timing(backgroundColorAnim, {
+        toValue: teamColor === "red" ? 0.3 : 0.7, // Push towards red or blue temporarily
+        duration: 300,
+        useNativeDriver: false,
+      }).start(() => {
+        // Then animate back to actual progress
+        Animated.timing(backgroundColorAnim, {
+          toValue: progress,
+          duration: 700,
+          useNativeDriver: false,
+        }).start();
+      });
     } catch (error) {
       console.error("Erreur lors de la création du document:", error);
     }
   };
 
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: "#A1CEDC", dark: "#1D3D47" }}
-      headerImage={
-        <Image
-          source={require("@/assets/images/partial-react-logo.png")}
-          style={styles.reactLogo}
-        />
-      }
-    >
-      <View style={styles.container}>
-        <View style={styles.teamInfo}>
-          <ThemedText style={styles.teamText}>Red: {redCount}</ThemedText>
-          <ThemedText style={styles.teamText}>Blue: {blueCount}</ThemedText>
-        </View>
-
-        <View style={styles.progressContainer}>
-          <ProgressBar
-            progress={progress}
-            color={progress < 0.5 ? "#FF5252" : "#4C6EF5"}
-            style={styles.progressBar}
+    <Animated.View style={[styles.mainContainer, { backgroundColor }]}>
+      <ParallaxScrollView
+        headerBackgroundColor={{ light: "transparent", dark: "transparent" }}
+        headerImage={
+          <Image
+            source={require("@/assets/images/partial-react-logo.png")}
+            style={styles.reactLogo}
           />
-        </View>
+        }
+      >
+        <View style={styles.container}>
+          <View style={styles.teamInfo}>
+            <ThemedText style={[styles.teamText, styles.redTeam]}>
+              Red: {redCount}
+            </ThemedText>
+            <ThemedText style={[styles.teamText, styles.blueTeam]}>
+              Blue: {blueCount}
+            </ThemedText>
+          </View>
 
-        <View style={styles.buttonContainer}>
-          <Button
-            title="Rouge"
-            onPress={() => handleCreateClick("red")}
-            color="#FF5252"
-          />
-          <Button
-            title="Bleu"
-            onPress={() => handleCreateClick("blue")}
-            color="#4C6EF5"
-          />
-        </View>
+          <View style={styles.progressContainer}>
+            <ProgressBar
+              progress={progress}
+              color={progress < 0.5 ? "#FF5252" : "#4C6EF5"}
+              style={styles.progressBar}
+            />
+          </View>
 
-        <ThemedText style={styles.totalCount}>
-          Total clicks: {totalCount}
-        </ThemedText>
-      </View>
-    </ParallaxScrollView>
+          <View style={styles.buttonContainer}>
+            <TouchableOpacity
+              style={[styles.roundButton, styles.redButton]}
+              onPress={() => handleCreateClick("red")}
+            >
+              <ThemedText style={styles.buttonText}>RED</ThemedText>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[styles.roundButton, styles.blueButton]}
+              onPress={() => handleCreateClick("blue")}
+            >
+              <ThemedText style={styles.buttonText}>BLUE</ThemedText>
+            </TouchableOpacity>
+          </View>
+
+          <ThemedText style={styles.totalCount}>
+            Total clicks: {totalCount}
+          </ThemedText>
+        </View>
+      </ParallaxScrollView>
+    </Animated.View>
   );
 }
 
 const styles = StyleSheet.create({
+  mainContainer: {
+    flex: 1,
+  },
   container: {
-    padding: 16,
+    padding: 20,
     gap: 16,
-  },
-  titleContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-  },
-  stepContainer: {
-    gap: 8,
-    marginBottom: 8,
   },
   reactLogo: {
     height: 178,
@@ -153,27 +198,70 @@ const styles = StyleSheet.create({
     position: "absolute",
   },
   progressContainer: {
-    marginVertical: 16,
+    marginVertical: 20,
   },
   progressBar: {
-    height: 10,
-    borderRadius: 5,
+    height: 16,
+    borderRadius: 8,
+    elevation: 3,
   },
   buttonContainer: {
     flexDirection: "row",
     justifyContent: "space-around",
-    marginVertical: 16,
+    marginVertical: 30,
   },
   teamInfo: {
     flexDirection: "row",
     justifyContent: "space-between",
-    marginBottom: 8,
+    marginBottom: 16,
+    paddingHorizontal: 10,
   },
   teamText: {
     fontWeight: "bold",
+    fontSize: 18,
+  },
+  redTeam: {
+    color: "#FF5252",
+    textShadowColor: "rgba(0, 0, 0, 0.2)",
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 1,
+  },
+  blueTeam: {
+    color: "#4C6EF5",
+    textShadowColor: "rgba(0, 0, 0, 0.2)",
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 1,
   },
   totalCount: {
     textAlign: "center",
-    marginTop: 8,
+    marginTop: 16,
+    fontSize: 16,
+    fontWeight: "500",
+  },
+  roundButton: {
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    justifyContent: "center",
+    alignItems: "center",
+    elevation: 8,
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 4.65,
+  },
+  redButton: {
+    backgroundColor: "#FF5252",
+  },
+  blueButton: {
+    backgroundColor: "#4C6EF5",
+  },
+  buttonText: {
+    color: "white",
+    fontWeight: "bold",
+    fontSize: 16,
   },
 });
