@@ -1,8 +1,8 @@
 import { Image, StyleSheet, Button } from "react-native";
 import { useEffect, useState } from "react";
 import { collection, addDoc, onSnapshot } from "firebase/firestore";
-import { db } from "./database";
-
+import { db } from "../../components/firebase/database";
+import { ProgressBar } from "react-native-paper";
 import ParallaxScrollView from "@/components/ParallaxScrollView";
 import { ThemedText } from "@/components/ThemedText";
 
@@ -17,7 +17,6 @@ export default function HomeScreen() {
       setCount(allClicks.length);
     });
 
-    // Nettoyage de l'écouteur Firestore à la désactivation du composant
     return () => unsubscribe();
   }, []);
 
@@ -25,8 +24,7 @@ export default function HomeScreen() {
     try {
       const interactionsRef = collection(db, "interactions");
       await addDoc(interactionsRef, {
-        team: teamColor,
-        timestamp: new Date(),
+        team: "red",
       });
       console.log("Document créé avec succès");
     } catch (error) {
@@ -47,6 +45,7 @@ export default function HomeScreen() {
       <Button title="Rouge" onPress={() => handleCreateClick("red")} />
       <Button title="Bleu" onPress={() => handleCreateClick("blue")} />
       <ThemedText>You clicked me {count} times</ThemedText>
+      <ProgressBar progress={0.5} />
     </ParallaxScrollView>
   );
 }
