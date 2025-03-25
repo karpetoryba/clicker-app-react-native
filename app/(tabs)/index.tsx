@@ -1,11 +1,38 @@
-import { Image, StyleSheet, Platform, Button, Alert } from "react-native";
+import { Image, StyleSheet, Button } from "react-native";
+import { useEffect, useState } from "react";
+import { collection, addDoc, onSnapshot } from "firebase/firestore";
+import { db } from "./database";
 
 import ParallaxScrollView from "@/components/ParallaxScrollView";
 import { ThemedText } from "@/components/ThemedText";
-import { useState } from "react";
 
 export default function HomeScreen() {
   const [count, setCount] = useState(0);
+
+  useEffect(() => {
+    const interactionRef = collection(db, "interactions");
+
+    const unsubscribe = onSnapshot(interactionRef, (snapshot) => {
+      const allClicks = snapshot.docs.map((doc) => doc.data());
+      setCount(allClicks.length);
+    });
+
+    // Nettoyage de l'écouteur Firestore à la désactivation du composant
+    return () => unsubscribe();
+  }, []);
+
+  const handleCreateClick = async (teamColor: string) => {
+    try {
+      const interactionsRef = collection(db, "interactions");
+      await addDoc(interactionsRef, {
+        team: teamColor,
+        timestamp: new Date(),
+      });
+      console.log("Document créé avec succès");
+    } catch (error) {
+      console.error("Erreur lors de la création du document:", error);
+    }
+  };
 
   return (
     <ParallaxScrollView
@@ -17,18 +44,8 @@ export default function HomeScreen() {
         />
       }
     >
-      <Button
-        onPress={() => {
-          setCount(count + 1);
-        }}
-        title="Rouge"
-      />
-      <Button
-        onPress={() => {
-          setCount(count + 1);
-        }}
-        title="Bleu"
-      />
+      <Button title="Rouge" onPress={() => handleCreateClick("red")} />
+      <Button title="Bleu" onPress={() => handleCreateClick("blue")} />
       <ThemedText>You clicked me {count} times</ThemedText>
     </ParallaxScrollView>
   );
