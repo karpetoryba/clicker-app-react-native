@@ -6,12 +6,12 @@ import { getFirestore } from "firebase/firestore";
 
 // Your web app's Firebase configuration
 const firebaseConfig = {
-  apiKey: "AIzaSyCKkaKUK28WXwnxdl6i6-Gwa3IZDeAjshE",
-  authDomain: "clicker-66580.firebaseapp.com",
-  projectId: "clicker-66580",
-  storageBucket: "clicker-66580.firebasestorage.app",
-  messagingSenderId: "77556637399",
-  appId: "1:77556637399:web:dad902f6f4b4378a239a92",
+  apiKey: "AIzaSyAm43dBvoqtsCsvP32rXIcI8LTzZMhxI3g",
+  authDomain: "clicker-app-a7a15.firebaseapp.com",
+  projectId: "clicker-app-a7a15",
+  storageBucket: "clicker-app-a7a15.firebasestorage.app",
+  messagingSenderId: "853470199341",
+  appId: "1:853470199341:web:b1f08833b740d4b4a5c2a4",
 };
 
 // Initialize Firebase
