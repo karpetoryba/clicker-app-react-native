@@ -24,6 +24,8 @@ export default function HomeScreen() {
   const [blueCount, setBlueCount] = useState(0);
   const [totalCount, setTotalCount] = useState(0);
   const [progress, setProgress] = useState(0.5); // Start at neutral 0.5
+  const [userClicks, setUserClicks] = useState(0);
+  const [autoClickerActive, setAutoClickerActive] = useState(false);
 
   const { pseudo } = useLocalSearchParams();
 
@@ -126,11 +128,27 @@ export default function HomeScreen() {
           duration: 700,
           useNativeDriver: false,
         }).start();
+
+        setUserClicks((prev) => prev + 1);
+        if (userClicks + 1 >= 10 && !autoClickerActive) {
+          setAutoClickerActive(true);
+          console.log("Auto-clicker débloqué !");
+        }
       });
     } catch (error) {
       console.error("Erreur lors de la création du document:", error);
     }
   };
+
+  useEffect(() => {
+    if (!autoClickerActive) return;
+
+    const interval = setInterval(() => {
+      handleCreateClick("red"); // ou choisis une team
+    }, 2000); // toutes les 2 secondes
+
+    return () => clearInterval(interval);
+  }, [autoClickerActive]);
 
   return (
     <Animated.View style={[styles.mainContainer, { backgroundColor }]}>
@@ -153,6 +171,13 @@ export default function HomeScreen() {
         >
           Hello, {pseudo}!
         </ThemedText>
+        {autoClickerActive && (
+          <ThemedText
+            style={{ textAlign: "center", color: "green", fontWeight: "bold" }}
+          >
+            🎉 Auto-clicker activé !
+          </ThemedText>
+        )}
 
         <View style={styles.container}>
           <View style={styles.teamInfo}>
@@ -206,11 +231,11 @@ const styles = StyleSheet.create({
     gap: 16,
   },
   reactLogo: {
-    height: 178,
-    width: 290,
+    height: 200,
+    width: 200,
     bottom: 0,
     left: 0,
-    position: "absolute",
+    position: "relative",
   },
   progressContainer: {
     marginVertical: 20,
