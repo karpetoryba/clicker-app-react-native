@@ -22,8 +22,12 @@ export default function PseudoScreen() {
         createdAt: new Date(),
       });
 
-      // Navigate to your game page (adjust route if needed)
-      router.push("/(tabs)/explore");
+      // Navigate
+
+      router.push({
+        pathname: "/(tabs)/explore",
+        params: { pseudo: trimmed }, // param de pseudo
+      });
     } catch (error) {
       Alert.alert("Error saving pseudo", (error as Error).message);
     }

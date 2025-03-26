@@ -13,6 +13,7 @@ import {
   query,
   where,
 } from "firebase/firestore";
+import { useLocalSearchParams } from "expo-router";
 import { db } from "../../components/firebase/database";
 import { ProgressBar } from "react-native-paper";
 import ParallaxScrollView from "@/components/ParallaxScrollView";
@@ -23,6 +24,8 @@ export default function HomeScreen() {
   const [blueCount, setBlueCount] = useState(0);
   const [totalCount, setTotalCount] = useState(0);
   const [progress, setProgress] = useState(0.5); // Start at neutral 0.5
+
+  const { pseudo } = useLocalSearchParams();
 
   // Animated background color value
   const backgroundColorAnim = useRef(new Animated.Value(0.5)).current;
@@ -107,6 +110,7 @@ export default function HomeScreen() {
       const interactionsRef = collection(db, "interactions");
       await addDoc(interactionsRef, {
         team: teamColor,
+        pseudo: pseudo || "Anonymous",
       } as Interaction);
       console.log("Document créé avec succès");
 
@@ -139,6 +143,17 @@ export default function HomeScreen() {
           />
         }
       >
+        <ThemedText
+          style={{
+            fontSize: 20,
+            fontWeight: "bold",
+            textAlign: "center",
+            marginBottom: 10,
+          }}
+        >
+          Hello, {pseudo}!
+        </ThemedText>
+
         <View style={styles.container}>
           <View style={styles.teamInfo}>
             <ThemedText style={[styles.teamText, styles.redTeam]}>
